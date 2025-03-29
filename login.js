@@ -40,10 +40,11 @@ form.addEventListener("submit", function (event) {
     } else {
         if (getUser(username) && getUser(username) === password) {
             alert("Login successful!");
-            window.location.href = "home.html"; // เปลี่ยนหน้าไปที่ home.html
+            localStorage.setItem("username", username); // Save username to localStorage
+            window.location.href = "home.html"; // Redirect to home.html
         } else {
             errorMessage.textContent = "Invalid username or password";
             errorMessage.style.display = "block";
         }
     }
-});
+})

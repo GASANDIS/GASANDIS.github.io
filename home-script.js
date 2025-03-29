@@ -1,7 +1,7 @@
 // ดึงข้อมูล username จาก localStorage และแสดงในหน้า home
 const usernameDisplay = document.getElementById("usernameDisplay");
 
-window.onload = function() {
+window.onload = function () {
     const username = localStorage.getItem("username");
     if (username) {
         usernameDisplay.textContent = username; // แสดงชื่อผู้ใช้ที่ล็อกอิน
