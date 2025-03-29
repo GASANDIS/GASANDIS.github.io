@@ -1,20 +1,48 @@
-const correctUsername = "user123";
-const correctPassword = "password123";
+let isLogin = true;
+const title = document.getElementById("title");
+const form = document.getElementById("form");
+const errorMessage = document.getElementById("errorMessage");
 
-const loginForm = document.getElementById('loginForm');
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
-const errorMessage = document.getElementById('errorMessage');
+function toggleForm() {
+    isLogin = !isLogin;
+    title.textContent = isLogin ? "Login" : "Register";
+    form.querySelector("button").textContent = isLogin ? "Login" : "Register";
+    form.querySelector(".toggle-form").innerHTML = isLogin
+        ? `Don't have an account? <span onclick="toggleForm()">Register</span>`
+        : `Already have an account? <span onclick="toggleForm()">Login</span>`;
+}
 
-loginForm.addEventListener('submit', function (event) {
+function saveUser(username, password) {
+    let users = JSON.parse(localStorage.getItem("users")) || {};
+    users[username] = password;
+    localStorage.setItem("users", JSON.stringify(users));
+}
+
+function getUser(username) {
+    let users = JSON.parse(localStorage.getItem("users")) || {};
+    return users[username];
+}
+
+form.addEventListener("submit", function (event) {
     event.preventDefault();
+    const username = form.querySelector("#username").value;
+    const password = form.querySelector("#password").value;
 
-    const username = usernameInput.value;
-    const password = passwordInput.value;
-
-    if (username === correctUsername && password === correctPassword) {
-        alert("Login successful!");
+    if (!isLogin) {
+        if (getUser(username)) {
+            errorMessage.textContent = "Username already exists!";
+            errorMessage.style.display = "block";
+        } else {
+            saveUser(username, password);
+            alert("Registration successful!");
+            toggleForm();
+        }
     } else {
-        errorMessage.style.display = 'block';
+        if (getUser(username) && getUser(username) === password) {
+            alert("Login successful!");
+        } else {
+            errorMessage.textContent = "Invalid username or password";
+            errorMessage.style.display = "block";
+        }
     }
 });

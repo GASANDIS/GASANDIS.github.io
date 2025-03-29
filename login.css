@@ -1,74 +1,40 @@
-/* ทำให้หน้าเว็บเต็มจอและจัดฟอร์มให้อยู่กลาง */
-@font-face {
-    font-family: itim;
-    src: url(font/Itim-Regular.ttf);
-}
-
 body {
-    height: 100%;
-    margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    height: 100vh;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
     font-family: Arial, sans-serif;
 }
 
-/* กล่องฟอร์มล็อกอิน */
-.login-container {
-    background: white;
-    padding: 40px;
+.container {
+    width: 350px;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
+    backdrop-filter: blur(10px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     text-align: center;
-    width: 350px;
-    animation: fadeIn 0.5s ease-in-out;
 }
 
-/* เพิ่ม Animation ตอนโหลดหน้า */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* หัวข้อ */
 h1 {
-    margin-bottom: 10px;
-    color: #333;
+    color: white;
 }
 
-p {
-    color: #666;
-    font-size: 14px;
-    margin-bottom: 20px;
-}
-
-/* ช่องกรอกข้อมูล */
 input {
     width: 100%;
     padding: 12px;
-    margin: 8px 0;
-    border: 1px solid #ccc;
+    margin: 10px 0;
+    border: none;
     border-radius: 8px;
-    transition: 0.3s;
-}
-
-/* เปลี่ยนสีขอบเมื่อคลิก */
-input:focus {
-    border-color: #0072ff;
-    box-shadow: 0 0 8px rgba(0, 114, 255, 0.2);
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 16px;
     outline: none;
 }
 
-/* ปุ่มล็อกอิน */
 button {
+    width: 100%;
     background: linear-gradient(135deg, #0072ff, #00c6ff);
     color: white;
     padding: 12px;
@@ -77,20 +43,26 @@ button {
     cursor: pointer;
     font-size: 16px;
     transition: 0.3s;
-    width: 100%;
-    margin-top: 10px;
 }
 
-/* เปลี่ยนสีปุ่มเมื่อ hover */
 button:hover {
     background: linear-gradient(135deg, #0057b3, #0088cc);
-    transform: scale(1.05);
 }
 
-/* ข้อความแจ้งเตือน */
-#errorMessage {
+.toggle-form {
+    margin-top: 10px;
+    font-size: 14px;
+    color: white;
+}
+
+.toggle-form span {
+    color: #00c6ff;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.error {
     color: red;
     font-size: 14px;
     display: none;
-    margin-top: 10px;
 }
