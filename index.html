@@ -1,19 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link rel="stylesheet" href="login.css">
 </head>
+
 <body>
-    <form action="">
-        <h1>Login</h1><br>
-        <p>Username</p><br>
-        <input type="text" name="Username" id="" placeholder="Enter you Username"><br>
-        <p>Password</p><br>
-        <input type="password" name="Password" id="" placeholder="Enter you Password"><br>
-        <button type="submit">submit</button>
-    </form>
+    <div class="login-container">
+        <form id="loginForm">
+            <h1>Welcome Back</h1>
+            <p>Please login to your account</p>
+
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter your username" required>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter your password" required>
+
+            <button type="submit">Login</button>
+
+            <p id="errorMessage">Incorrect username or password</p>
+        </form>
+    </div>
+
+    <script src="login.js"></script>
 </body>
-</html>
+
+</html>>
