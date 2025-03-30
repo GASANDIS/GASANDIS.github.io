@@ -3,23 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เกมหลบสิ่งกีดขวาง</title>
+    <title>เกมยานอวกาศ 8-bit</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #f0f0f0;
+            background-color: black;
             font-family: Arial, sans-serif;
         }
         #gameCanvas {
             display: block;
-            background-color: #333;
             margin: 0 auto;
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            background-color: #111;
         }
         #startScreen, #gameOverScreen {
             position: absolute;
@@ -35,16 +30,58 @@
             font-size: 36px;
             text-align: center;
         }
+        button {
+            font-size: 20px;
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e67e22;
+        }
+        /* ปุ่มสำหรับมือถือ */
+        #controlPanel {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .controlBtn {
+            background-color: #f39c12;
+            border: none;
+            color: white;
+            padding: 20px;
+            font-size: 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .controlBtn:active {
+            background-color: #e67e22;
+        }
+        #shootButton {
+            background-color: #e74c3c;
+            padding: 20px 40px;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
+
+    <!-- หน้าจอเริ่มเกม -->
     <div id="startScreen">
         <div>
-            <h1>หลบสิ่งกีดขวาง</h1>
+            <h1>เกมยานอวกาศ 8-bit</h1>
             <button onclick="startGame()">เริ่มเกม</button>
         </div>
     </div>
+
+    <!-- หน้าจอเกมจบ -->
     <div id="gameOverScreen" style="display: none;">
         <div>
             <h1>Game Over!</h1>
@@ -53,24 +90,37 @@
         </div>
     </div>
 
+    <!-- ปุ่มควบคุมสำหรับมือถือ -->
+    <div id="controlPanel" style="display: none;">
+        <button class="controlBtn" id="leftBtn">←</button>
+        <button class="controlBtn" id="rightBtn">→</button>
+        <button class="controlBtn" id="shootButton">ยิง</button>
+    </div>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
+        // เสียง
+        const shootSound = new Audio('https://www.soundjay.com/button/beep-07.wav');
+        shootSound.volume = 0.1;
+
+        // ตัวแปรเกม
         const player = {
             x: canvas.width / 2,
-            y: canvas.height - 30,
+            y: canvas.height - 50,
             width: 50,
             height: 50,
-            speed: 5,
+            speed: 7,
             dx: 0
         };
 
+        const lasers = [];
         const obstacles = [];
         const obstacleSpeed = 2;
-        const obstacleInterval = 2000;  // สร้างอุปสรรคทุกๆ 2 วินาที
+        const obstacleInterval = 2000;
         let gameInterval, score, gameRunning;
 
         // สร้างอุปสรรค
@@ -81,21 +131,32 @@
             obstacles.push({ x, y: -height, width, height });
         }
 
+        // สร้างกระสุน
+        function shootLaser() {
+            lasers.push({ x: player.x + player.width / 2 - 5, y: player.y, width: 10, height: 20 });
+            shootSound.play();
+        }
+
         // อัพเดทตำแหน่งของผู้เล่น
         function movePlayer() {
             player.x += player.dx;
 
-            // จำกัดการเคลื่อนที่ของผู้เล่นไม่ให้เกินขอบจอ
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+        }
+
+        // อัพเดทตำแหน่งของกระสุน
+        function moveLasers() {
+            for (let i = 0; i < lasers.length; i++) {
+                lasers[i].y -= 5;
+                if (lasers[i].y < 0) lasers.splice(i, 1);
+            }
         }
 
         // อัพเดทตำแหน่งของอุปสรรค
         function moveObstacles() {
             for (let i = 0; i < obstacles.length; i++) {
                 obstacles[i].y += obstacleSpeed;
-
-                // ลบอุปสรรคที่ออกจากหน้าจอ
                 if (obstacles[i].y > canvas.height) {
                     obstacles.splice(i, 1);
                     i--;
@@ -103,61 +164,75 @@
             }
         }
 
-        // ตรวจสอบการชนระหว่างผู้เล่นและอุปสรรค
+        // ตรวจสอบการชนระหว่างกระสุนและอุปสรรค
         function detectCollision() {
-            for (let i = 0; i < obstacles.length; i++) {
-                if (
-                    player.x < obstacles[i].x + obstacles[i].width &&
-                    player.x + player.width > obstacles[i].x &&
-                    player.y < obstacles[i].y + obstacles[i].height &&
-                    player.y + player.height > obstacles[i].y
-                ) {
-                    endGame();
+            for (let i = 0; i < lasers.length; i++) {
+                for (let j = 0; j < obstacles.length; j++) {
+                    if (
+                        lasers[i].x < obstacles[j].x + obstacles[j].width &&
+                        lasers[i].x + lasers[i].width > obstacles[j].x &&
+                        lasers[i].y < obstacles[j].y + obstacles[j].height &&
+                        lasers[i].y + lasers[i].height > obstacles[j].y
+                    ) {
+                        obstacles.splice(j, 1);
+                        lasers.splice(i, 1);
+                        score++;
+                        break;
+                    }
                 }
             }
         }
 
-        // วาดตัวผู้เล่นและอุปสรรค
+        // วาดผู้เล่น, กระสุน, และอุปสรรค
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#ff0000';
+
+            ctx.fillStyle = '#ff0000'; // ยาน
             ctx.fillRect(player.x, player.y, player.width, player.height);
 
-            ctx.fillStyle = '#00ff00';
+            ctx.fillStyle = '#00ff00'; // อุปสรรค
             for (let i = 0; i < obstacles.length; i++) {
                 ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
             }
 
+            ctx.fillStyle = '#fff'; // กระสุน
+            for (let i = 0; i < lasers.length; i++) {
+                ctx.fillRect(lasers[i].x, lasers[i].y, lasers[i].width, lasers[i].height);
+            }
+
             // แสดงคะแนน
-            ctx.fillStyle = '#fff';
             ctx.font = '24px Arial';
             ctx.fillText('คะแนน: ' + score, 10, 30);
         }
 
-        // เริ่มเกมใหม่
+        // ฟังก์ชันเริ่มเกม
         function startGame() {
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('controlPanel').style.display = 'flex';
+
             score = 0;
             obstacles.length = 0;
+            lasers.length = 0;
             player.x = canvas.width / 2;
-            player.y = canvas.height - 30;
+            player.y = canvas.height - 50;
             gameRunning = true;
             gameInterval = setInterval(updateGame, 1000 / 60);
             setInterval(createObstacle, obstacleInterval);
         }
 
-        // ฟังก์ชันอัพเดท
+        // ฟังก์ชันอัพเดทเกม
         function updateGame() {
             if (!gameRunning) return;
+
             movePlayer();
+            moveLasers();
             moveObstacles();
             detectCollision();
-            score++;
             draw();
         }
 
-        // รีเซ็ตเกม
+        // เกมจบ
         function endGame() {
             clearInterval(gameInterval);
             gameRunning = false;
@@ -165,22 +240,25 @@
             document.getElementById('gameOverScreen').style.display = 'flex';
         }
 
+        // รีสตาร์ทเกม
         function restartGame() {
             startGame();
         }
 
-        // ควบคุมการเคลื่อนที่ของผู้เล่น
-        function keyDownHandler(e) {
-            if (e.key == 'ArrowRight') player.dx = player.speed;
-            else if (e.key == 'ArrowLeft') player.dx = -player.speed;
-        }
+        // ปุ่มควบคุมมือถือ
+        document.getElementById('leftBtn').addEventListener('click', () => {
+            player.dx = -player.speed;
+        });
 
-        function keyUpHandler(e) {
-            if (e.key == 'ArrowRight' || e.key == 'ArrowLeft') player.dx = 0;
-        }
+        document.getElementById('rightBtn').addEventListener('click', () => {
+            player.dx = player.speed;
+        });
 
-        window.addEventListener('keydown', keyDownHandler);
-        window.addEventListener('keyup', keyUpHandler);
+        document.getElementById('shootButton').addEventListener('click', shootLaser);
+
+        // ควบคุมเมื่อเลิกกดปุ่ม
+        document.getElementById('leftBtn').addEventListener('touchend', () => player.dx = 0);
+        document.getElementById('rightBtn').addEventListener('touchend', () => player.dx = 0);
     </script>
 </body>
 </html>
