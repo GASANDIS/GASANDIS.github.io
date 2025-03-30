@@ -1,21 +1,186 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CrashOn Run</title>
+    <title>เกมหลบสิ่งกีดขวาง</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        #gameCanvas {
+            display: block;
+            background-color: #333;
+            margin: 0 auto;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        #startScreen, #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 36px;
+            text-align: center;
         }
     </style>
 </head>
-
 <body>
     <canvas id="gameCanvas"></canvas>
-    <script src="script.js"></script>
-</body>
+    <div id="startScreen">
+        <div>
+            <h1>หลบสิ่งกีดขวาง</h1>
+            <button onclick="startGame()">เริ่มเกม</button>
+        </div>
+    </div>
+    <div id="gameOverScreen" style="display: none;">
+        <div>
+            <h1>Game Over!</h1>
+            <p>คะแนนของคุณ: <span id="score"></span></p>
+            <button onclick="restartGame()">เล่นอีกครั้ง</button>
+        </div>
+    </div>
 
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 30,
+            width: 50,
+            height: 50,
+            speed: 5,
+            dx: 0
+        };
+
+        const obstacles = [];
+        const obstacleSpeed = 2;
+        const obstacleInterval = 2000;  // สร้างอุปสรรคทุกๆ 2 วินาที
+        let gameInterval, score, gameRunning;
+
+        // สร้างอุปสรรค
+        function createObstacle() {
+            const width = Math.random() * (canvas.width / 2);
+            const height = 30;
+            const x = Math.random() * (canvas.width - width);
+            obstacles.push({ x, y: -height, width, height });
+        }
+
+        // อัพเดทตำแหน่งของผู้เล่น
+        function movePlayer() {
+            player.x += player.dx;
+
+            // จำกัดการเคลื่อนที่ของผู้เล่นไม่ให้เกินขอบจอ
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+        }
+
+        // อัพเดทตำแหน่งของอุปสรรค
+        function moveObstacles() {
+            for (let i = 0; i < obstacles.length; i++) {
+                obstacles[i].y += obstacleSpeed;
+
+                // ลบอุปสรรคที่ออกจากหน้าจอ
+                if (obstacles[i].y > canvas.height) {
+                    obstacles.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        // ตรวจสอบการชนระหว่างผู้เล่นและอุปสรรค
+        function detectCollision() {
+            for (let i = 0; i < obstacles.length; i++) {
+                if (
+                    player.x < obstacles[i].x + obstacles[i].width &&
+                    player.x + player.width > obstacles[i].x &&
+                    player.y < obstacles[i].y + obstacles[i].height &&
+                    player.y + player.height > obstacles[i].y
+                ) {
+                    endGame();
+                }
+            }
+        }
+
+        // วาดตัวผู้เล่นและอุปสรรค
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            ctx.fillStyle = '#00ff00';
+            for (let i = 0; i < obstacles.length; i++) {
+                ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+            }
+
+            // แสดงคะแนน
+            ctx.fillStyle = '#fff';
+            ctx.font = '24px Arial';
+            ctx.fillText('คะแนน: ' + score, 10, 30);
+        }
+
+        // เริ่มเกมใหม่
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            score = 0;
+            obstacles.length = 0;
+            player.x = canvas.width / 2;
+            player.y = canvas.height - 30;
+            gameRunning = true;
+            gameInterval = setInterval(updateGame, 1000 / 60);
+            setInterval(createObstacle, obstacleInterval);
+        }
+
+        // ฟังก์ชันอัพเดท
+        function updateGame() {
+            if (!gameRunning) return;
+            movePlayer();
+            moveObstacles();
+            detectCollision();
+            score++;
+            draw();
+        }
+
+        // รีเซ็ตเกม
+        function endGame() {
+            clearInterval(gameInterval);
+            gameRunning = false;
+            document.getElementById('score').textContent = score;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        // ควบคุมการเคลื่อนที่ของผู้เล่น
+        function keyDownHandler(e) {
+            if (e.key == 'ArrowRight') player.dx = player.speed;
+            else if (e.key == 'ArrowLeft') player.dx = -player.speed;
+        }
+
+        function keyUpHandler(e) {
+            if (e.key == 'ArrowRight' || e.key == 'ArrowLeft') player.dx = 0;
+        }
+
+        window.addEventListener('keydown', keyDownHandler);
+        window.addEventListener('keyup', keyUpHandler);
+    </script>
+</body>
 </html>
